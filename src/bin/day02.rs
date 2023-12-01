@@ -1,5 +1,3 @@
-use adventofcode2023::day02::solve;
-
 fn main() {
-    solve();
+    println!("Hello, day 02!");
 }
