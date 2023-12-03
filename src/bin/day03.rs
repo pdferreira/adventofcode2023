@@ -1,4 +1,7 @@
-use std::{fs, str::FromStr, cmp::{max, min}, collections::{HashMap, HashSet}};
+use std::cmp::{max, min};
+use std::collections::{HashMap, HashSet};
+use std::error::Error;
+use std::fs;
 
 struct EngineSchematic {
     rep: Vec<Vec<char>>
@@ -11,15 +14,14 @@ fn main() {
     println!("input (part2): {:?}", solve("inputs/day03", /*part_1*/false));
 }
 
-fn solve(path: &str, part_1: bool) -> Result<u32, <u32 as FromStr>::Err> {
-    let content = fs::read_to_string(path).unwrap();
+fn solve(path: &str, part_1: bool) -> Result<u32, Box<dyn Error>> {
+    let content = fs::read_to_string(path)?;
     let schematic = EngineSchematic::parse(&content);
     return if part_1 { 
         Ok(schematic.get_part_numbers()?.iter().sum())
     } else {
         Ok(schematic.get_gear_ratios()?.iter().sum())
     }
-    
 }
 
 impl EngineSchematic {
@@ -32,7 +34,7 @@ impl EngineSchematic {
         }
     }
 
-    fn get_part_numbers(&self) -> Result<Vec<u32>, <u32 as FromStr>::Err> {
+    fn get_part_numbers(&self) -> Result<Vec<u32>, Box<dyn Error>> {
         let mut part_numbers = Vec::<u32>::new();
         for r in 0 .. self.rep.len() {
             let row = &self.rep[r];
@@ -81,7 +83,7 @@ impl EngineSchematic {
         return symbols;
     }
 
-    fn get_gear_ratios(&self) -> Result<Vec<u32>, <u32 as FromStr>::Err> {
+    fn get_gear_ratios(&self) -> Result<Vec<u32>, Box<dyn Error>> {
         let mut gears = HashMap::<(usize, usize), Vec<u32>>::new();
         for r in 0 .. self.rep.len() {
             let row = &self.rep[r];
