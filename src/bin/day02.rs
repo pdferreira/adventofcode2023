@@ -1,5 +1,6 @@
 use std::error::Error;
 use std::fs;
+use itertools::process_results;
 use adventofcode2023::str::StringOps;
 
 struct Play {
@@ -29,30 +30,33 @@ fn main() {
 
 fn solve(path: &str, part_1: bool) -> Result<u32, Box<dyn Error>> {
     let content = fs::read_to_string(path)?;
-    let games: Vec<Game> = content
-        .lines()
-        .map(|l| Game::parse(l).unwrap())
-        .collect();
+    let games: Vec<Game> = process_results(
+        content
+            .lines()
+            .map(|l| Game::parse(l)),
+        |it| it.collect())?;
 
     let game_counts = games
         .iter()
-        .map(|g| Counters {
+        .map(|g| Ok(Counters {
             game_id: g.id,
-            red: g.get_max_count(|p| p.red_dice_count),
-            green: g.get_max_count(|p| p.green_dice_count),
-            blue: g.get_max_count(|p| p.blue_dice_count)
-        });
+            red: g.get_max_count(|p| p.red_dice_count)?,
+            green: g.get_max_count(|p| p.green_dice_count)?,
+            blue: g.get_max_count(|p| p.blue_dice_count)?
+        }));
 
     if part_1 {
-        return Ok(
-            game_counts
+        return process_results(
+            game_counts,
+            |it| it
                 .filter(|c| c.red <= 12 && c.green <= 13 && c.blue <= 14)
                 .map(|c| u32::from(c.game_id))
                 .sum()
         );
     } else {
-        return Ok(
-            game_counts
+        return process_results(
+            game_counts,
+            |it| it
                 .map(|c| u32::from(c.red) * u32::from(c.green) * u32::from(c.blue))
                 .sum()
         );
@@ -67,12 +71,14 @@ impl Game {
 
         return Ok(Game {
             id: str::parse(id_str)?,
-            plays: play_strs.map(|p_str| Play::parse(p_str).unwrap()).collect()
+            plays: process_results(
+                play_strs.map(|p_str| Play::parse(p_str)),
+                |it| it.collect())?
         });
     }
 
-    fn get_max_count(&self, get_count: fn(&Play) -> u8) -> u8 {
-        self.plays.iter().map(get_count).max().unwrap()
+    fn get_max_count(&self, get_count: fn(&Play) -> u8) -> Result<u8, &str> {
+        self.plays.iter().map(get_count).max().ok_or("No plays")
     }
 }
 

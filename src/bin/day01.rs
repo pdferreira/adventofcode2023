@@ -1,33 +1,44 @@
+use std::error::Error;
 use std::fs;
+use itertools::process_results;
+
+type Result<T> = core::result::Result<T, Box<dyn Error>>;
+
+fn ok<T>(v: T) -> Result<T> {
+    Result::Ok(v)
+}
 
 const DIGIT_NAMES: [&str; 9] = ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine"];
 
 fn main() {
-    println!("example (part1): {}", solve("inputs/day01_example", parse_digits_part1));
-    println!("input (part1): {}", solve("inputs/day01", parse_digits_part1));
-    println!("example (part2): {}", solve("inputs/day01_example2", parse_digits_part2));
-    println!("input (part2): {}", solve("inputs/day01", parse_digits_part2));
+    println!("example (part1): {:?}", solve("inputs/day01_example", parse_digits_part1));
+    println!("input (part1): {:?}", solve("inputs/day01", parse_digits_part1));
+    println!("example (part2): {:?}", solve("inputs/day01_example2", parse_digits_part2));
+    println!("input (part2): {:?}", solve("inputs/day01", parse_digits_part2));
 }
 
-fn solve(path: &str, parse_digits: fn(&str) -> Vec<char>) -> u32 {
+fn solve(path: &str, parse_digits: fn(&str) -> Result<Vec<char>>) -> Result<u32> {
     let content = fs::read_to_string(path).unwrap();
-    return content
+    let res = process_results(
+        content
         .lines()
         .map(|l| {
-            let digits = parse_digits(l);
-            return format!("{}{}", digits[0], digits[digits.len() - 1]).parse::<u32>().unwrap();
-        })
-        .sum::<u32>();
+            let digits = parse_digits(l)?;
+            let num = format!("{}{}", digits[0], digits[digits.len() - 1]).parse::<u32>()?;
+            return ok(num);
+        }),
+        |it| it.sum::<u32>())?;
+    return Ok(res);
 }
 
-fn parse_digits_part1(line: &str) -> Vec<char> {
-    return line.chars().filter(|c| c.is_numeric()).collect::<Vec<char>>();
+fn parse_digits_part1(line: &str) -> Result<Vec<char>> {
+    return Ok(line.chars().filter(|c| c.is_numeric()).collect::<Vec<char>>());
 }
 
-fn parse_digits_part2(line: &str) -> Vec<char> {
-    let first = get_first_digit(line, false).unwrap();
-    let last = get_first_digit(line, true).unwrap();
-    return vec![first, last];
+fn parse_digits_part2(line: &str) -> Result<Vec<char>> {
+    let first = get_first_digit(line, false).ok_or(format!("No digit found"))?;
+    let last = get_first_digit(line, true).ok_or(format!("No digit found"))?;
+    return ok(vec![first, last]);
 }
 
 fn get_first_digit(line: &str, from_end: bool) -> Option<char> {
