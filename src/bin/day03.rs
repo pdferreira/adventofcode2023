@@ -1,27 +1,27 @@
 use std::cmp::{max, min};
 use std::collections::{HashMap, HashSet};
-use std::error::Error;
 use std::fs;
+use adventofcode2023::Part;
+use adventofcode2023::Result;
 
 struct EngineSchematic {
     rep: Vec<Vec<char>>
 }
 
 fn main() {
-    println!("example (part1): {:?}", solve("inputs/day03_example", /*part_1*/true));
-    println!("input (part1): {:?}", solve("inputs/day03", /*part_1*/true));
-    println!("example (part2): {:?}", solve("inputs/day03_example", /*part_1*/false));
-    println!("input (part2): {:?}", solve("inputs/day03", /*part_1*/false));
+    println!("example (part1): {:?}", solve("inputs/day03_example", Part::One));
+    println!("input (part1): {:?}", solve("inputs/day03", Part::One));
+    println!("example (part2): {:?}", solve("inputs/day03_example", Part::Two));
+    println!("input (part2): {:?}", solve("inputs/day03", Part::Two));
 }
 
-fn solve(path: &str, part_1: bool) -> Result<u32, Box<dyn Error>> {
+fn solve(path: &str, part: Part) -> Result<u32> {
     let content = fs::read_to_string(path)?;
     let schematic = EngineSchematic::parse(&content);
-    return if part_1 { 
-        Ok(schematic.get_part_numbers()?.iter().sum())
-    } else {
-        Ok(schematic.get_gear_ratios()?.iter().sum())
-    }
+    Ok(match part {
+        Part::One => schematic.get_part_numbers()?.iter().sum(),
+        Part::Two => schematic.get_gear_ratios()?.iter().sum()
+    })
 }
 
 impl EngineSchematic {
@@ -34,7 +34,7 @@ impl EngineSchematic {
         }
     }
 
-    fn get_part_numbers(&self) -> Result<Vec<u32>, Box<dyn Error>> {
+    fn get_part_numbers(&self) -> Result<Vec<u32>> {
         let mut part_numbers = Vec::<u32>::new();
         for r in 0 .. self.rep.len() {
             let row = &self.rep[r];
@@ -83,7 +83,7 @@ impl EngineSchematic {
         return symbols;
     }
 
-    fn get_gear_ratios(&self) -> Result<Vec<u32>, Box<dyn Error>> {
+    fn get_gear_ratios(&self) -> Result<Vec<u32>> {
         let mut gears = HashMap::<(usize, usize), Vec<u32>>::new();
         for r in 0 .. self.rep.len() {
             let row = &self.rep[r];

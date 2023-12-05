@@ -10,3 +10,12 @@ pub mod str {
         }
     }
 }
+
+use std::error::Error;
+
+pub type Result<T, E = Box<dyn Error>> = core::result::Result<T, E>;
+
+pub enum Part {
+    One,
+    Two
+}
