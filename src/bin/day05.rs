@@ -195,11 +195,11 @@ impl Map {
             .ok_or("No header for map")?
             .try_split_once(" ")?;
 
-        let mut ranges = vec![];
-        while let Some(range_str) = line_it.next().filter(|s| !s.is_empty()) {
-            ranges.push(Mapping::parse(&range_str)?);
+        let mut mappings = vec![];
+        while let Some(mapping_str) = line_it.next().filter(|s| !s.is_empty()) {
+            mappings.push(Mapping::parse(&mapping_str)?);
         }
-        Ok(Map { name: name.to_string(), mappings: ranges })
+        Ok(Map { name: name.to_string(), mappings })
     }
 
     fn convert(&self, num: u64) -> u64 {
@@ -212,10 +212,11 @@ impl Map {
     fn convert_range(&self, num_range: Range) -> Vec<Range> {
         let mut to_process = vec![num_range];
         let mut result = vec![];
-        for map_range in &self.mappings {
+        
+        for mapping in &self.mappings {
             let mut new_to_process = vec![];
             for r in to_process {
-                if let Some((converted, mut remaining)) = map_range.convert_range(r) {
+                if let Some((converted, mut remaining)) = mapping.convert_range(r) {
                     // Append to the result all those converted
                     result.push(converted);
 
