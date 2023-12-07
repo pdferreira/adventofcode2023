@@ -1,12 +1,15 @@
 use std::cmp::min;
 use std::fs;
+use std::time::Instant;
+use rayon::prelude::*;
 use adventofcode2023::{Result, Part};
 use adventofcode2023::str::{StringOps, parse_sequence};
 
 #[allow(dead_code)]
 enum Part2Solution {
     RunEverySeedThroughPart1, // Runs in < 1h
-    UseRangesAllWayThrough // Much more efficient
+    RunEverySeedThroughPart1InParallel, // Runs in ~12 minutes
+    UseRangesAllWayThrough, // Runs in few milliseconds
 }
 
 const PART2_SOLUTION_TO_USE: Part2Solution = Part2Solution::UseRangesAllWayThrough;
@@ -36,8 +39,12 @@ struct Almanac {
 fn main() {
     println!("example (part1): {:?}", solve("inputs/day05_example", Part::One));
     println!("input (part1): {:?}", solve("inputs/day05", Part::One));
-    println!("example (part2): {:?}", solve("inputs/day05_example", Part::Two));
-    println!("input (part2): {:?}", solve("inputs/day05", Part::Two));
+
+    let start_ex = Instant::now();
+    println!("example (part2): {:?} (took {} µs)", solve("inputs/day05_example", Part::Two), start_ex.elapsed().as_micros());
+
+    let start_in = Instant::now();
+    println!("input (part2): {:?} (took {} µs)", solve("inputs/day05", Part::Two), start_in.elapsed().as_micros());
 }
 
 fn solve(path: &str, part: Part) -> Result<u64> {
@@ -59,6 +66,19 @@ fn solve(path: &str, part: Part) -> Result<u64> {
                 .map(|seed| almanac.where_to_plant(seed))
                 .min()
                 .ok_or("No seeds")?,
+
+        (Part::Two, Part2Solution::RunEverySeedThroughPart1InParallel) => {
+            let all_the_seeds: Vec<u32> = almanac.seeds
+                .chunks(2)
+                .flat_map(|c| c[0] .. c[0] + c[1])
+                .collect();
+
+            all_the_seeds
+                .par_iter()
+                .map(|seed| almanac.where_to_plant(*seed))
+                .min()
+                .ok_or("No seeds")?
+        },
         
         (Part::Two, Part2Solution::UseRangesAllWayThrough) =>
             almanac.seeds
@@ -212,7 +232,7 @@ impl Map {
     fn convert_range(&self, num_range: Range) -> Vec<Range> {
         let mut to_process = vec![num_range];
         let mut result = vec![];
-        
+
         for mapping in &self.mappings {
             let mut new_to_process = vec![];
             for r in to_process {
