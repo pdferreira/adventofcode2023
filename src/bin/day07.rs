@@ -92,7 +92,7 @@ impl Hand<'_> {
                 curr_label = sorted_cards[i];
             }
 
-            if use_joker_rule && curr_label == 'J' {
+            if curr_label == 'J' {
                 num_jokers += 1;
             }
         }
@@ -101,8 +101,8 @@ impl Hand<'_> {
             num_pairs += 1;
         }
 
-        // If we're playing with any jokers, evaluate those cases first
-        if num_jokers > 0 {
+        // If we're playing accounting for jokers, evaluate those cases first
+        if use_joker_rule && num_jokers > 0 {
             return self.classify_with_jokers(num_pairs, num_distinct_labels, num_jokers);
         }
 
