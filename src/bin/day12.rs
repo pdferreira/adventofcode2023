@@ -69,9 +69,7 @@ impl HotSpringRow {
     }
 
     fn count_arrangements(&self) -> u64 {
-        let t = count_arrangements(&self.conditions, &self.spec, &mut HashMap::new());
-        // println!("{:?} {}", self, t);
-        return t
+        count_arrangements(&self.conditions, &self.spec, &mut HashMap::new())
     }
 
     fn unfold(&self) -> HotSpringRow {
@@ -110,7 +108,12 @@ impl Condition {
 
 }
 
-fn count_arrangements<'a, 'b>(mut conds: &'a [Condition], spec: &'b [u32], cache: &mut HashMap<(&'a [Condition], &'b [u32]), u64>) -> u64 {
+fn count_arrangements<'a, 'b>(
+    mut conds: &'a [Condition],
+    spec: &'b [u32],
+    cache: &mut HashMap<(&'a [Condition], &'b [u32]), u64>
+) -> u64 {
+    // Get cached value if available
     if let Some(&total) = cache.get(&(conds, spec)) {
         return total;
     }
@@ -139,7 +142,6 @@ fn count_arrangements<'a, 'b>(mut conds: &'a [Condition], spec: &'b [u32], cache
         return 0;
     }
     
-
     // Otherwise, take the first value of the spec and try to apply it in different arrangements
     let mut num_arragements = 0;
     let (&num_expected_damaged, rest_spec) = spec.split_first().unwrap();
