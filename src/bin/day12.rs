@@ -143,7 +143,7 @@ fn count_arrangements<'a, 'b>(
     }
     
     // Otherwise, take the first value of the spec and try to apply it in different arrangements
-    let mut num_arragements = 0;
+    let mut num_arrangements = 0;
     let (&num_expected_damaged, rest_spec) = spec.split_first().unwrap();
 
     // One possible arrangement is to check if the immediate next conditions adhere to the spec
@@ -155,15 +155,15 @@ fn count_arrangements<'a, 'b>(
             return rest_spec.is_empty() as u64;
         } else if rest_cs[0] != Condition::Damaged {
             let total = count_arrangements(&rest_cs[1..], rest_spec, cache);
-            num_arragements += *cache.entry((&rest_cs[1..], rest_spec)).or_insert(total);
+            num_arrangements += *cache.entry((&rest_cs[1..], rest_spec)).or_insert(total);
         }
     }
 
     // Other possible arrangements might occur if we simply skip one cell, assuming it is empty
     if conds[0] != Condition::Damaged {
         let total = count_arrangements(&conds[1..], spec, cache);
-        num_arragements += *cache.entry((&conds[1..], spec)).or_insert(total);
+        num_arrangements += *cache.entry((&conds[1..], spec)).or_insert(total);
     }
     
-    return num_arragements
+    return num_arrangements
 }
