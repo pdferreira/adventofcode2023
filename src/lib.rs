@@ -20,11 +20,25 @@ pub mod str {
     }
 }
 
+use std::time::Instant;
 use std::error::Error;
+use std::fs;
 
 pub type Result<T, E = Box<dyn Error>> = core::result::Result<T, E>;
 
 pub enum Part {
     One,
     Two
+}
+
+pub fn run<T: std::fmt::Debug>(file_path: &str, part: Part, solve: impl Fn(&str, Part) -> Result<T>) {
+    let time = Instant::now();
+    let part_str = match part {
+        Part::One => "part1",
+        Part::Two => "part2"
+    };
+    let content = fs::read_to_string(file_path).unwrap();
+    println!("Running for \"{file_path}\" ({part_str}):");
+    println!("{:?} ({} µs)", solve(&content, part), time.elapsed().as_micros());
+    println!();
 }
