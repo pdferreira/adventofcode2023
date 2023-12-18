@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::cmp::Reverse;
 use priority_queue::PriorityQueue;
 use adventofcode2023::{Result, Part, run};
 
@@ -61,17 +62,17 @@ impl HeatMap {
     fn min_heat(&self, sr: usize, sc: usize, tr: usize, tc: usize, min_same_dir: u8, max_same_dir: u8) -> u32 {
         let num_rows = self.num_rows();
         let num_cols = self.num_cols();
-        let min_allowed_budget = max_same_dir - min_same_dir;
+        let min_required_budget = max_same_dir - min_same_dir;
 
         // To ensure we explore the variations coming from all 4 directions + budget
         // store the min heats for each and evaluate at the end
         let mut min_heats = vec![vec![HashMap::new(); num_cols]; num_rows];
-        let mut to_visit = PriorityQueue::<CrucibleCell, i32>::new();
+        let mut to_visit = PriorityQueue::<CrucibleCell, Reverse<u32>>::new();
 
         min_heats[sr][sc].insert((0, 0, max_same_dir), 0);
-        to_visit.push(CrucibleCell { r: sr, c: sr, dr: 0, dc: 0, same_dir_budget: max_same_dir }, 0_i32);
+        to_visit.push(CrucibleCell { r: sr, c: sr, dr: 0, dc: 0, same_dir_budget: max_same_dir }, Reverse(0));
 
-        while let Some((cell, min_heat)) = to_visit.pop() {
+        while let Some((cell, Reverse(min_heat))) = to_visit.pop() {
             for (dr, dc) in [(0, 1), (1, 0), (-1, 0), (0, -1)] {
                 // If invalid indexes, ignore
                 let nr = cell.r as isize + dr;
@@ -92,7 +93,7 @@ impl HeatMap {
                         continue;
                     }
                     same_dir_budget = cell.same_dir_budget - 1;
-                } else if cell.same_dir_budget > min_allowed_budget && (cell.dr != 0 || cell.dc != 0) {
+                } else if cell.same_dir_budget > min_required_budget && (cell.dr != 0 || cell.dc != 0) {
                     // If not going in the same direction but the budget minimum was not spent, ignore
                     continue;
                 } else {
@@ -101,15 +102,15 @@ impl HeatMap {
 
                 let nr = nr as usize;
                 let nc = nc as usize;
-                let n_min_heat = min_heat.abs() as u32 + self.map[nr][nc] as u32;
+                let n_min_heat = min_heat + self.map[nr][nc] as u32;
                 if let Some(old_n_min_heat) = min_heats[nr][nc].get_mut(&(dr, dc, same_dir_budget)) {
                     if *old_n_min_heat > n_min_heat {
                         *old_n_min_heat = n_min_heat;
-                        to_visit.push_increase(CrucibleCell { r: nr, c: nc, dr, dc, same_dir_budget }, -(n_min_heat as i32));
+                        to_visit.push_increase(CrucibleCell { r: nr, c: nc, dr, dc, same_dir_budget }, Reverse(n_min_heat));
                     }
                 } else {
                     min_heats[nr][nc].insert((dr, dc, same_dir_budget), n_min_heat);
-                    to_visit.push(CrucibleCell { r: nr, c: nc, dr, dc, same_dir_budget }, -(n_min_heat as i32));
+                    to_visit.push(CrucibleCell { r: nr, c: nc, dr, dc, same_dir_budget }, Reverse(n_min_heat));
                 }
             }
             // println!("{:?} with heat {}", cell, min_heat);
@@ -119,7 +120,7 @@ impl HeatMap {
         // print_min_heats(&min_heats);
         *min_heats[tr][tc]
             .iter()
-            .filter(|((_, _, budget), _)| *budget <= min_allowed_budget)
+            .filter(|((_, _, budget), _)| *budget <= min_required_budget)
             .map(|(_, h)| h)
             .min()
             .unwrap()
